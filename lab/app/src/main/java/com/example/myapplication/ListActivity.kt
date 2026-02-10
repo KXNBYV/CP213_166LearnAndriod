@@ -16,11 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
 
 
 class ListActivity : ComponentActivity() {
@@ -35,128 +34,208 @@ class ListActivity : ComponentActivity() {
 
 @Composable
 fun ListScreen() {
+    var query by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFB11212)) // แดง Pokédex
+            .background(PokedexRedBody)
     ) {
-        PokedexHeader()
+        // 🔴 Header (ไม่มี Box ครอบ)
+        PokedexHeader(
+            query = query,
+            onQueryChange = { query = it }
+        )
 
+        // 🟦 Screen
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            PokedexScreen(query)
+        }
+    }
+
+}
+
+// 🎨 Pokédex color palette
+val PokedexRedBody   = Color(0xFFB71C23) // ตัวเครื่อง
+val PokedexRedHeader = Color(0xFF94161D) // ฝาบน
+val PokedexRedInset  = Color(0xFFBE1F25) // ช่องค้นหา
+
+@Composable
+fun PokedexHeader(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(96.dp)
+            .background(PokedexRedHeader)
+            .padding(
+                start = 15.dp,
+                end = 15.dp,
+                top = 15.dp,
+                bottom = 15.dp
+            )
+    ) {
+
+        // 🔼 แถวบน: เลนส์ + ไฟ + search (บรรทัดเดียว)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            // 🔵 วงกลมฟ้า (สูงเท่า header)
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
+                    .background(Color(0xFFCFE7FF), CircleShape)
+                    .border(4.dp, Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight(0.65f)
+                        .aspectRatio(1f)
+                        .background(Color(0xFF3479B7), CircleShape)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // ขวา: 🔴🟡🟢 (บน) + 🔍 (ล่าง)
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                // 🔴🟡🟢
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    LightDot(Color(0xFFFF0000))
+                    LightDot(Color(0xFFFFB500))
+                    LightDot(Color(0xFF00FF09))
+                }
+
+                // 🔍 ช่องค้นหา
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .height(46.dp)
+                        .background(PokedexRedInset, RoundedCornerShape(23.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        singleLine = true,
+                        placeholder = {
+                            Text(
+                                "Fill pokemon name or ID",
+                                color = Color(0xFF2D2A2A),
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        textStyle = LocalTextStyle.current.copy(
+                            fontSize = 14.sp,
+                            lineHeight = 16.sp,
+                            textAlign = TextAlign.Start
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+                    )
+                }
+            }
+        }
+
+        // 🔽 แถวล่าง (แบ่งส่วนหัว/จอ)
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+
+
+@Composable
+fun PokedexScreen(query: String) {
+
+    val filteredPokemon = remember(query) {
+        allKantoPokemon.filter {
+            it.name.contains(query, true) ||
+                    it.number.toString().contains(query)
+        }
+    }
+
+    // กรอบนอก
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
+            .background(Color(0xFFA9A9A9), RoundedCornerShape(32.dp))
+            .padding(8.dp)
+    ) {
+        // กรอบใน (จอ)
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(Color.White, RoundedCornerShape(26.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            PokedexScreen()
-        }
-    }
-}
-
-@Composable
-fun PokedexHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // วงกลมใหญ่ (เลนส์)
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(Color(0xFF4FC3F7), CircleShape)
-                .border(4.dp, Color.White, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // ไฟ 3 จุด
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            LightDot(Color.Red)
-            LightDot(Color.Yellow)
-            LightDot(Color.Green)
-        }
-    }
-}
-
-@Composable
-fun LightDot(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(12.dp)
-            .background(color, CircleShape)
-    )
-}
-
-@Composable
-fun PokedexScreen() {
-    var query by remember { mutableStateOf("") }
-
-    val filteredPokemon = remember(query) {
-        allKantoPokemon.filter { pokemon ->
-            pokemon.name.contains(query, ignoreCase = true) ||
-                    pokemon.number.toString().contains(query)
-        }
-    }
-
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
-    ) {
-        Column {
-            PokedexSearchBar(
-                query = query,
-                onQueryChange = { query = it }
-            )
-
-            LazyColumn(
-                modifier = Modifier.padding(vertical = 4.dp)
-            ) {
+            LazyColumn {
                 items(filteredPokemon) { pokemon ->
                     PokemonRow(pokemon)
-                    Divider(
-                        thickness = 1.dp,
-                        color = Color(0xFFE0E0E0),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    Divider(color = Color(0xFFC4C4C4))
                 }
             }
         }
     }
 }
 
-
 @Composable
 fun PokemonRow(pokemon: Pokemon) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 18.dp), // ⬅️ คุมจำนวนแถว
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Text(
-            text = "#${pokemon.number}",
-            color = Color.Gray,
-            modifier = Modifier.width(32.dp)
+            "#${pokemon.number}",
+            color = Color.DarkGray,
+            fontSize = 18.sp,         // ⬅️ เพิ่ม
+            modifier = Modifier.width(44.dp)
         )
 
         Text(
-            text = pokemon.name.lowercase(),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium
+            pokemon.name.lowercase(),
+            fontSize = 20.sp,         // ⬅️ เพิ่ม (หลัก)
+            modifier = Modifier.weight(1f)
         )
 
         AsyncImage(
             model = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${pokemon.number}.png",
             contentDescription = pokemon.name,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(40.dp)
         )
     }
 }
+
 
 @Composable
 fun PokedexSearchBar(
@@ -183,7 +262,14 @@ fun PokedexSearchBar(
     )
 }
 
-
+@Composable
+fun LightDot(color: Color) {
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .background(color, CircleShape)
+    )
+}
 
 
 data class Pokemon(
