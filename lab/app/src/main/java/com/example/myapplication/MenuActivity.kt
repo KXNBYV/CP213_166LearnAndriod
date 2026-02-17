@@ -24,10 +24,17 @@ class MenuActivity : ComponentActivity() {
                 }) {
                     Text("MainActivity")
                 }
+
                 Button(onClick = {
-                    startActivity(Intent(this@MenuActivity, ListActivity::class.java))
+                    startActivity(Intent(this@MenuActivity, PokedexActivity::class.java))
                 }) {
-                    Text("ListActivity")
+                    Text("PokedexActivity")
+                }
+
+                Button(onClick = {
+                    startActivity(Intent(this@MenuActivity, SharedPreferencesActivity::class.java))
+                }) {
+                    Text("SharedPreferencesActivity")
                 }
             }
         }

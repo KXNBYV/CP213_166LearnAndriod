@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // เพิ่ม Google Services Plugin
+    id("com.google.gms.google-services") version "4.4.0" apply false
 }
 
 android {
@@ -58,4 +60,20 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(platform("androidx.compose:compose-bom:2024.01.00"))
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    implementation("io.coil-kt:coil-compose:2.5.0") // Check for the latest version
+
+    // Retrofit สำหรับคุยกับ Server
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Converter สำหรับแปลง JSON เป็น Data Class (Gson)
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Lifecycle & ViewModel สำหรับ Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+
+    // Firebase BOM (ตัวจัดการเวอร์ชั่น ให้มันเลือกเวอร์ชั่นที่เข้ากันได้เอง)
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+
+    // Cloud Firestore Library
+    implementation("com.google.firebase:firebase-firestore")
 }

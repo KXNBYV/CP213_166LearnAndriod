@@ -1,9 +1,11 @@
 package com.example.myapplication
 
+import PokemonEntry
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,18 +24,25 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
 
-class ListActivity : ComponentActivity() {
+class PokedexActivity : ComponentActivity() {
+    private val viewModel: PokemonViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
         setContent {
-            ListScreen()
+            ListScreen(viewModel)
         }
     }
 }
 
 @Composable
-fun ListScreen() {
+fun ListScreen(viewModel: PokemonViewModel) {
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchPokemon()
+    }
+
     var query by remember { mutableStateOf("") }
 
     Column(
@@ -53,7 +62,7 @@ fun ListScreen() {
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            PokedexScreen(query)
+            PokedexScreen(query, viewModel)
         }
     }
 
@@ -99,7 +108,7 @@ fun PokedexHeader(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxHeight(0.65f)
+                        .fillMaxHeight(0.75f)
                         .aspectRatio(1f)
                         .background(Color(0xFF3479B7), CircleShape)
                 )
@@ -173,12 +182,15 @@ fun PokedexHeader(
 
 
 @Composable
-fun PokedexScreen(query: String) {
+fun PokedexScreen(query: String, viewModel: PokemonViewModel) {
 
-    val filteredPokemon = remember(query) {
-        allKantoPokemon.filter {
-            it.name.contains(query, true) ||
-                    it.number.toString().contains(query)
+    val pokemonList by viewModel.pokemonList.collectAsState()
+
+
+    val filteredPokemon = remember(query, pokemonList) {
+        pokemonList.filter {
+            it.pokemon_species.name.contains(query, true) ||
+                    it.entry_number.toString().contains(query)
         }
     }
 
@@ -194,6 +206,11 @@ fun PokedexScreen(query: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .border(
+                    width = 1.7.dp,              // 👈 ขอบดำบาง ๆ
+                    color = Color.Black,
+                    shape = RoundedCornerShape(26.dp)
+                )
                 .background(Color.White, RoundedCornerShape(26.dp))
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
@@ -208,7 +225,7 @@ fun PokedexScreen(query: String) {
 }
 
 @Composable
-fun PokemonRow(pokemon: Pokemon) {
+fun PokemonRow(pokemon: PokemonEntry) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -216,21 +233,21 @@ fun PokemonRow(pokemon: Pokemon) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "#${pokemon.number}",
+            "#${pokemon.entry_number}",
             color = Color.DarkGray,
             fontSize = 18.sp,         // ⬅️ เพิ่ม
             modifier = Modifier.width(44.dp)
         )
 
         Text(
-            pokemon.name.lowercase(),
+            pokemon.pokemon_species.name.lowercase(),
             fontSize = 20.sp,         // ⬅️ เพิ่ม (หลัก)
             modifier = Modifier.weight(1f)
         )
 
         AsyncImage(
-            model = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${pokemon.number}.png",
-            contentDescription = pokemon.name,
+            model = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/${pokemon.entry_number}.png",
+            contentDescription = pokemon.pokemon_species.name,
             modifier = Modifier.size(40.dp)
         )
     }
@@ -267,52 +284,9 @@ fun LightDot(color: Color) {
     Box(
         modifier = Modifier
             .size(12.dp)
+            .border(1.dp, Color.White, CircleShape)
             .background(color, CircleShape)
     )
 }
-
-
-data class Pokemon(
-    val name: String,
-    val number: Int
-)
-
-val allKantoPokemon = listOf(
-    Pokemon("Bulbasaur", 1),
-    Pokemon("Ivysaur", 2),
-    Pokemon("Venusaur", 3),
-    Pokemon("Charmander", 4),
-    Pokemon("Charmeleon", 5),
-    Pokemon("Charizard", 6),
-    Pokemon("Squirtle", 7),
-    Pokemon("Wartortle", 8),
-    Pokemon("Blastoise", 9),
-    Pokemon("Caterpie", 10),
-    Pokemon("Metapod", 11),
-    Pokemon("Butterfree", 12),
-    Pokemon("Weedle", 13),
-    Pokemon("Kakuna", 14),
-    Pokemon("Beedrill", 15),
-    Pokemon("Pidgey", 16),
-    Pokemon("Pidgeotto", 17),
-    Pokemon("Pidgeot", 18),
-    Pokemon("Rattata", 19),
-    Pokemon("Raticate", 20),
-    Pokemon("Spearow", 21),
-    Pokemon("Fearow", 22),
-    Pokemon("Ekans", 23),
-    Pokemon("Arbok", 24),
-    Pokemon("Pikachu", 25),
-    Pokemon("Raichu", 26),
-    Pokemon("Sandshrew", 27),
-    Pokemon("Sandslash", 28),
-    Pokemon("Nidoran♀", 29),
-    Pokemon("Nidorina", 30),
-    Pokemon("Nidoqueen", 31),
-    Pokemon("Nidoran♂", 32),
-    Pokemon("Nidorino", 33),
-    Pokemon("Nidoking", 34),
-    Pokemon("Clefairy", 35),
-)
 
 // Tips: for image : https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/1.png
